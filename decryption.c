@@ -15,7 +15,7 @@ char  IV[] = "f2120e383cc2969021330ff47406a593";
 //struct for sent return
 struct reArray{
 	char* r;
-	int pos ;
+	unsigned char pos ;
 };
 //curl to get staus; if 200 return 1; if 500 return 0;
 bool sentToWeb(char* myCookie){
@@ -62,7 +62,7 @@ bool bigOFunc(char * cmbStr){	//cmbStr is a itoa str
 	}
 	// now encodedFinalStr is base64 ed 
 	// final agree pos
-	int pos = 1;
+	unsigned char pos = 1;
 	if(sentToWeb(encodedFinalStr)){
 		return 1;
 	}
@@ -70,7 +70,7 @@ bool bigOFunc(char * cmbStr){	//cmbStr is a itoa str
 }
 
 //decrypt a single word, return plaintext
-struct reArray decryption(char* C){
+struct reArray decryption_word(char* C){
 	// C is not itoa base
 	srand(time(NULL));
 	char r[cons_b+1];
@@ -126,14 +126,26 @@ struct reArray decryption(char* C){
 		}
 		if(!bigOFunc(hexBaseStr)){
 			//pos is 1
-			 re.r = sd_r;
-			re.pos = i;
+			re.r = sd_r;
+			re.pos =(unsigned char) i;
 			return re;
 		}
 	}
 	re.r = sd_r;
 	re.pos = 1;
 	return re;
+}
+char* decryption_block(char* C,char* r, unsigned pos){
+	//create array a
+	char a[cons_b+1];
+	int i=0;
+	for(i=0;i<cons_b+1;i++){
+		a[i] = r[i];
+	}
+	for(i=cons_b-1;i>=cons_b-pos;i--){
+		a[i] = r[i] ^ (pos);
+	}
+	return NULL;
 }
 
 
@@ -160,7 +172,7 @@ int main(int argc, char** argv){
 		block_count++;
 	}
 	printf("cmd is: %s \n",cmd);	
-	decryption("\xd5\x71\x3c\x2a\xd2\x97\xa7\x60\x11\x35\xc2\x2f\x51\x51\x6b\xbb");
+	decryption_word("\xd5\x71\x3c\x2a\xd2\x97\xa7\x60\x11\x35\xc2\x2f\x51\x51\x6b\xbb");
 
 	return 0;
 }
