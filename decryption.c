@@ -11,6 +11,7 @@
 #define cons_url "http://ugster19.student.cs.uwaterloo.ca:4555"
 #define Default_cookie "8hIOODzClpAhMw/0dAalk+YrwZqmZPmuCyOmRpzyfH+fnJ0dKBtOL+NaHufa1MQw1XE8KtKXp2ARNcIvUVFruw=="
 char  IV[] = "f2120e383cc2969021330ff47406a593";
+// change IV seems not to effect the pass check, so can do sth in encryption
 char check[] = "d5713c2ad297a7601135c22f51516bbb";
 char finalStr[1000] ;
 char res[100][100];
@@ -177,7 +178,6 @@ struct reArray decryption_block(char * C){
 	re.r[0] ^= '\x10';
 	return re;
 }
-//8hIOODzClpAhMw/0dAalkxUVFRUVFRUVFRW8vLy8vDHVcTwq0penYBE1wi9RUWu7
 // check result
 bool checkFunction(char *r){
 	char tmp[200];
@@ -199,7 +199,8 @@ int main(int argc, char** argv){
 	}
 	srand(time(NULL));
 	FILE *fp;
-	int block_count = 0;
+	int i=0, j =0;
+	int block_count = 0;	// final base64 decrypted block count, including IV
 	char *cmd= (char *)malloc(1000);	
 	char  de_cookie_base64[10][100];
 	// prepare cmd para
@@ -212,14 +213,35 @@ int main(int argc, char** argv){
 	}
 	// read base64 decoded data from pipe
 	while(fgets(de_cookie_base64[block_count],COOKIE_LEN, fp) != NULL){
-		//printf("de_cookie_base64[%d] is: %s\n", block_count, de_cookie_base64[block_count]);
+		printf("de_cookie_base64[%d] is: %s\n", block_count, de_cookie_base64[block_count]);
 		block_count++;
+	}
+	// format block string to accomodate functions above
+	char * hexBlock[block_count];
+	for(i=0;i<block_count;i++){
+		hexBlock[i] = (char*)malloc(cons_b*2+1);
+		hexBlock[i][cons_b*2] = '\0';
+		for( j =0;j<cons_b*2;j++){
+			hexBlock[i][j] = de_cookie_base64[i][1+3*(j/2)+j%2];
+			//hexBlock[i][j] = de_cookie_base64[i][1+j];
+		}
+		// printf("hexBlock %d is:%s len:%d \n", i, hexBlock[i], strlen(hexBlock[i]));
+	}
+	char* C_1[block_count];
+	for(i=0;i<block_count;i++){
+		C_1[i] = (char*)malloc(cons_b*2+1);
+		C_1[i][cons_b*2] ='\0';
+	}
+	for(i=1;i<block_count;i++){
+		struct reArray re = decryption_block(hexBlock[i]);
+		C_1[i] = re.r;
+		printf("C_1%d is:%s \n", i, C_1[i]);
 	}
 	printf("cmd is: %s \n",cmd);	
 	//decryption_word("\xd5\x71\x3c\x2a\xd2\x97\xa7\x60\x11\x35\xc2\x2f\x51\x51\x6b\xbb");
 	char q1[]="\x9f\x9c\x9d\x1d\x4e\x2f\xe3\xea\x1e\xe7\xda\xd4\xc4\x30";
-	char q2[] = "\xd5\x71\x3c\x2a\xd2\x97\xa7\x60\x11\x35\xc2\x2f\x51\x51\x6b\xbb";
-	checkFunction("ebf1f4730a216e4982366d82a7d7c430");
+	char q2[] ="\xd5\x71\x3c\x2a\xd2\x97\xa7\x60\x11\x35\xc2\x2f\x51\x51\x6b\xbb";
+	//checkFunction("ebf1f4730a216e4982366d82a7d7c430");
 	/*
 	struct reArray re = decryption_block(q2);
 	int i=0;
